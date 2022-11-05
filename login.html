@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Agenda Web</title>
+
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <style>
+      body,
+      html{
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body background="fondix.jpg">
+
+    <div class="container h-100 w-50">
+      <div class="row justify-content-center h-100 align-items-center">
+        <form style="border:1px solid black;padding: 5rem;border-radius:0.5rem;">
+          <div class="form-group">
+            <label for="Usuario">Usuario:</label>
+            <input type="text" class="form-control" id="Usuario" required>
+          </div>
+          <div class="form-group">
+            <label for="Clave">Contraseña:</label>
+            <input type="password" class="form-control" id="Clave" required>
+          </div>
+          <div class="form-group mt-2">
+            <button type="button" class="btn btn-primary" id="BotonLogin" name="button">Iniciar Sesion</button>
+          </div>
+          <div class="form-group mt-2">
+            <a href="#" id="NuevoUsuario">Registrar usuario</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal fade" id="FormUsuarioNuevo" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">x</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden"id="Id">
+            <div class="form-row">
+              <div class="form-group col-md-12">
+                <label>Nombre de Usuario:</label>
+                <input type="text" id="NombreNuevo" class="form-control" name="" value="">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-12">
+                <label>Contraseña:</label>
+                <input type="password" id="Clave1" class="form-control" name="" value="">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-12">
+                <label>Repita la contraseña:</label>
+                <input type="password" id="Clave2" class="form-control" name="" value="">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="BotonAgregarUsuario" class="btn btn-success" name="button">Agregar</button>
+            <button type="button" class="btn btn-success" data-bs-dismiss="modal" name="button">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+
+    document.addEventListener("DOMContentLoaded", function (){
+
+      $('#NuevoUsuario').click(function () {
+        borrarFormulario();
+        $("#FormUsuarioNuevo").modal('show');
+      });
+
+      $('#BotonAgregarUsuario').click( function (){
+        let nuevousuario = regresarNuevoUsuario();
+        if (validarEntradaDatos(nuevousuario)) {
+          agregarNuevoUsuario(nuevousuario);
+        }
+      });
+
+      $('#BotonLogin').click(function () {
+        let usuario = regresarUsuario();
+        loginUsuario(usuario);
+      });
+
+      //Funciones de Formulario
+      function borrarFormulario() {
+        $('#NombreNuevo').val("");
+        $('#Clave1').val("");
+        $('#Clave2').val("");
+      }
+
+      function regresarUsuario(){
+        let usuario = {
+          usuario: $('#Usuario').val(),
+          clave: $('#Clave').val()
+        };
+        return usuario;
+      }
+
+      function regresarNuevoUsuario(){
+        let nuevousuario = {
+          nombrenuevo: $('#NombreNuevo').val(),
+          clave1: $('#Clave1').val(),
+          clave2: $('#Clave2').val()
+        };
+        return nuevousuario;
+      }
+
+
+      function validarEntradaDatos(nuevousuario){
+        if (nuevousuario.nombrenuevo == '') {
+          alert("No puede ingresar un usuario vacio!");
+          return false;
+        }
+        if (nuevousuario.clave1 == '') {
+          alert("No puede ingresar una contraseña vacia!");
+          return false;
+        }
+        if (nuevousuario.clave1 != nuevousuario.clave2) {
+          alert("Las claves contraseña no coinciden!");
+          return false;
+        }
+        return true;
+      }
+
+      function loginUsuario(usuario){
+        $.ajax({
+          type: 'POST',
+          url: 'login.php',
+          data: usuario,
+          success: function(respuesta){
+            if (respuesta == 'Correcta') {
+              window.location = 'index.php';
+            }
+            else{
+              alert("Nombre o Contraseña incorrectas!");
+            }
+          },
+          error: function (){
+            alert("Ups... Hubo un error!");
+          }
+        });
+      }
+
+      function agregarNuevoUsuario(nuevousuario){
+        $.ajax({
+          type: 'POST',
+          url: 'datosusuarios.php?accion=existe',
+          data: nuevousuario,
+          success: function (info){
+            if (info.resultado == 'norepetido') {
+
+              $.ajax({
+                type: 'POST',
+                url: 'datosusuarios.php?accion=agregar',
+                data: nuevousuario,
+                success: function(){
+                  alert("Se agrego el nuevo usuario");
+                  $("#FormUsuarioNuevo").modal('hide');
+                },
+                error: function (){
+                  alert("Ocurrio un error!");
+                }
+              });
+            } else {
+              alert("Este Usuario ya existe!");
+            }
+          },
+          error: function (){
+            alert("Ocurrio un error!");
+          }
+        });
+      }
+
+
+    });
+
+    </script>
+
+  </body>
+</html>
